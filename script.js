@@ -25,29 +25,27 @@ const modalScore = document.getElementById("modalScore");
 const modalWave = document.getElementById("modalWave");
 
 const PATH_POINTS = [
-  { x: 60, y: 110 },
-  { x: 200, y: 110 },
-  { x: 200, y: 230 },
-  { x: 400, y: 230 },
-  { x: 400, y: 140 },
-  { x: 590, y: 140 },
-  { x: 590, y: 340 },
-  { x: 790, y: 340 },
-  { x: 790, y: 500 },
-  { x: 900, y: 500 },
+  { x: 60, y: 176 },
+  { x: 742, y: 176 },
+  { x: 742, y: 302 },
+  { x: 604, y: 302 },
+  { x: 604, y: 356 },
+  { x: 760, y: 356 },
+  { x: 760, y: 540 },
+  { x: 900, y: 540 },
 ];
 
 const PAD_POSITIONS = [
-  { x: 120, y: 200 },
-  { x: 120, y: 320 },
-  { x: 280, y: 145 },
-  { x: 305, y: 315 },
-  { x: 455, y: 80 },
-  { x: 505, y: 230 },
-  { x: 520, y: 410 },
-  { x: 665, y: 250 },
-  { x: 710, y: 430 },
-  { x: 855, y: 260 },
+  { x: 148, y: 210 },
+  { x: 270, y: 146 },
+  { x: 404, y: 146 },
+  { x: 566, y: 146 },
+  { x: 706, y: 210 },
+  { x: 360, y: 300 },
+  { x: 548, y: 336 },
+  { x: 808, y: 288 },
+  { x: 566, y: 300 },
+  { x: 700, y: 300 },
 ];
 
 const ENEMY_TYPES = {
@@ -96,6 +94,7 @@ const ENEMY_TYPES = {
 const TOWER_TYPES = {
   nurse: {
     name: "Nurse",
+    icon: "👩‍⚕️",
     cost: 25,
     range: 125,
     fireRate: 0.42,
@@ -107,6 +106,7 @@ const TOWER_TYPES = {
   },
   doctor: {
     name: "Doctor",
+    icon: "🧑‍⚕️",
     cost: 50,
     range: 155,
     fireRate: 0.95,
@@ -118,6 +118,7 @@ const TOWER_TYPES = {
   },
   pharmacist: {
     name: "Pharmacist",
+    icon: "💊",
     cost: 40,
     range: 135,
     fireRate: 0.78,
@@ -132,6 +133,7 @@ const TOWER_TYPES = {
   },
   infection: {
     name: "Infection Control",
+    icon: "🧴",
     cost: 45,
     range: 140,
     fireRate: 1.05,
@@ -374,12 +376,27 @@ function openBuildMenu(pad) {
     const button = document.createElement("button");
     button.className = "build-option";
     button.disabled = game.credits < tower.cost;
-    button.innerHTML = `<strong>${tower.name} - ${tower.cost} credits</strong><span>${tower.description}</span>`;
+    const roleHint =
+      key === "nurse"
+        ? "Fast shot • starter"
+        : key === "doctor"
+          ? "Heavy hit • slow fire"
+          : key === "pharmacist"
+            ? "DOT support"
+            : "Slow burst • control";
+    button.innerHTML = `
+      <span class="build-icon ${key}">${tower.icon}</span>
+      <span class="build-copy">
+        <strong>${tower.name} - ${tower.cost} credits</strong>
+        <span>${tower.description}</span>
+        <small>${roleHint}</small>
+      </span>
+    `;
     button.addEventListener("click", () => buildTower(key, pad.id));
     buildOptions.appendChild(button);
   });
 
-  const menuWidth = Math.min(290, canvas.clientWidth - 24);
+  const menuWidth = Math.min(330, canvas.clientWidth - 24);
   const scaleX = canvas.clientWidth / canvas.width;
   const scaleY = canvas.clientHeight / canvas.height;
   const padClientX = pad.x * scaleX;
@@ -408,6 +425,10 @@ function showModal(victory) {
     : "A few too many pathogens slipped past the defense line.";
   modalScore.textContent = `${finalScore}`;
   modalWave.textContent = `${Math.min(game.waveIndex + (victory ? 0 : 1), 5)}`;
+  modalTag.style.color = victory ? "#1d9bf0" : "#dc4747";
+  modalRestartBtn.textContent = victory ? "Play Again" : "Try Again";
+  modalRestartBtn.classList.toggle("secondary", !victory);
+  modalRestartBtn.classList.toggle("primary", victory);
   modalOverlay.classList.remove("hidden");
   modalOverlay.setAttribute("aria-hidden", "false");
 }
@@ -428,7 +449,7 @@ function updateHud() {
   if (game.state === "ready") {
     hud.status.textContent = game.waveIndex >= WAVES.length ? "All Clear" : "Ready";
   } else if (game.state === "wave") {
-    hud.status.textContent = `${enemiesAlive} incoming`;
+    hud.status.textContent = `${enemiesAlive} left`;
   } else if (game.state === "victory") {
     hud.status.textContent = "Hospital Safe";
   } else if (game.state === "gameover") {
@@ -659,8 +680,8 @@ function updateEffects(delta) {
 function drawPath() {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = "#dbeef6";
-  ctx.lineWidth = 56;
+  ctx.strokeStyle = "rgba(87, 101, 111, 0.34)";
+  ctx.lineWidth = 78;
   ctx.beginPath();
   ctx.moveTo(PATH_POINTS[0].x, PATH_POINTS[0].y);
   for (let i = 1; i < PATH_POINTS.length; i += 1) {
@@ -668,47 +689,73 @@ function drawPath() {
   }
   ctx.stroke();
 
-  ctx.strokeStyle = "#f8fdff";
-  ctx.lineWidth = 40;
+  ctx.strokeStyle = "#c8d2d8";
+  ctx.lineWidth = 66;
   ctx.stroke();
 
-  ctx.setLineDash([18, 14]);
-  ctx.strokeStyle = "rgba(127, 183, 206, 0.72)";
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = "#edf2f5";
+  ctx.lineWidth = 48;
+  ctx.stroke();
+
+  ctx.setLineDash([20, 14]);
+  ctx.strokeStyle = "rgba(149, 164, 174, 0.6)";
+  ctx.lineWidth = 3;
   ctx.stroke();
   ctx.setLineDash([]);
-
-  ctx.strokeStyle = "rgba(131, 208, 233, 0.18)";
-  ctx.lineWidth = 62;
-  ctx.stroke();
 }
 
 function drawZones() {
   const start = PATH_POINTS[0];
   const end = PATH_POINTS[PATH_POINTS.length - 1];
 
-  ctx.fillStyle = "rgba(70, 199, 244, 0.28)";
+  ctx.fillStyle = "rgba(216, 232, 239, 0.9)";
   ctx.beginPath();
-  ctx.arc(start.x, start.y, 40, 0, Math.PI * 2);
+  ctx.roundRect(start.x - 54, start.y - 28, 96, 56, 16);
   ctx.fill();
+  ctx.strokeStyle = "rgba(111, 131, 143, 0.7)";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
 
-  ctx.fillStyle = "rgba(255, 97, 97, 0.25)";
+  ctx.fillStyle = "rgba(241, 221, 221, 0.92)";
   ctx.beginPath();
-  ctx.arc(end.x, end.y, 46, 0, Math.PI * 2);
+  ctx.roundRect(end.x - 66, end.y - 34, 124, 68, 18);
   ctx.fill();
+  ctx.strokeStyle = "rgba(146, 104, 104, 0.72)";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
 
-  ctx.fillStyle = "#1f3758";
-  ctx.font = '800 18px "Baloo 2"';
+  ctx.fillStyle = "#365067";
+  ctx.font = '800 16px "Baloo 2"';
   ctx.textAlign = "center";
-  ctx.fillText("ER Entrance", start.x, start.y - 50);
-  ctx.fillText("Hospital Core", end.x, end.y - 58);
+  ctx.fillText("ER Entrance", start.x - 6, start.y + 5);
+  ctx.fillStyle = "#7f4444";
+  ctx.fillText("Hospital Core", end.x - 4, end.y + 5);
   ctx.textAlign = "start";
 }
 
 function drawPads() {
   game.pads.forEach((pad) => {
-    ctx.fillStyle = pad.tower ? "#ffffff" : "#f2fbff";
-    ctx.strokeStyle = pad.tower ? "rgba(31,55,88,0.22)" : "#7ac7ea";
+    ctx.fillStyle = "rgba(114, 129, 139, 0.11)";
+    ctx.beginPath();
+    ctx.roundRect(pad.x - 32, pad.y - 26, 64, 52, 18);
+    ctx.fill();
+
+    ctx.fillStyle = "#e6edf1";
+    ctx.beginPath();
+    ctx.roundRect(pad.x - 28, pad.y - 22, 56, 44, 16);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(131, 149, 160, 0.2)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(112, 135, 149, 0.12)";
+    ctx.beginPath();
+    ctx.arc(pad.x, pad.y, pad.radius + 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = pad.tower ? "#f8fbfd" : "#f3f9fc";
+    ctx.strokeStyle = pad.tower ? "rgba(100,120,136,0.38)" : "rgba(103, 181, 223, 0.82)";
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.arc(pad.x, pad.y, pad.radius, 0, Math.PI * 2);
@@ -716,8 +763,8 @@ function drawPads() {
     ctx.stroke();
 
     if (!pad.tower) {
-      ctx.fillStyle = "#4aa9d7";
-      ctx.font = '800 28px "Nunito"';
+      ctx.fillStyle = "#63b4dd";
+      ctx.font = '800 22px "Nunito"';
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("+", pad.x, pad.y + 1);
@@ -745,6 +792,12 @@ function drawStaffAvatar(x, y, type, scale = 1) {
   ctx.arc(0, 1, 18, 0, Math.PI * 2);
   ctx.fill();
 
+  ctx.strokeStyle = "rgba(255,255,255,0.75)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 1, 18, 0, Math.PI * 2);
+  ctx.stroke();
+
   ctx.fillStyle = skin;
   ctx.beginPath();
   ctx.arc(0, -5, 7, 0, Math.PI * 2);
@@ -765,6 +818,9 @@ function drawStaffAvatar(x, y, type, scale = 1) {
   ctx.beginPath();
   ctx.roundRect(-8, 2, 16, 12, 6);
   ctx.fill();
+  ctx.strokeStyle = "rgba(31,55,88,0.12)";
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
 
   if (type === "nurse") {
     ctx.fillStyle = "#ffffff";
@@ -775,6 +831,10 @@ function drawStaffAvatar(x, y, type, scale = 1) {
     ctx.fillRect(-1, -11.5, 2, 3);
     ctx.fillRect(-3.5, -10.3, 7, 1.5);
   } else if (type === "doctor") {
+    ctx.fillStyle = "#ff7b7b";
+    ctx.beginPath();
+    ctx.arc(0, -12, 4.5, 0, Math.PI * 2);
+    ctx.fill();
     ctx.strokeStyle = "#8cc2da";
     ctx.lineWidth = 1.4;
     ctx.beginPath();
@@ -794,6 +854,10 @@ function drawStaffAvatar(x, y, type, scale = 1) {
     ctx.fill();
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(-0.7, 4.2, 1.4, 3.6);
+    ctx.fillStyle = "#f6d55c";
+    ctx.beginPath();
+    ctx.arc(0, -12, 4.6, 0, Math.PI * 2);
+    ctx.fill();
   } else if (type === "infection") {
     ctx.fillStyle = accentColor;
     ctx.beginPath();
@@ -801,6 +865,11 @@ function drawStaffAvatar(x, y, type, scale = 1) {
     ctx.fill();
     ctx.fillStyle = "#2c8d59";
     ctx.fillRect(-0.9, -10.5, 1.8, 3);
+    ctx.strokeStyle = "#d7fff0";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.arc(0, -1, 11.5, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   ctx.restore();
@@ -814,10 +883,21 @@ function drawTowers() {
 
 function drawEnemies() {
   game.enemies.forEach((enemy) => {
+    ctx.fillStyle = "rgba(31,55,88,0.14)";
+    ctx.beginPath();
+    ctx.ellipse(enemy.x, enemy.y + enemy.radius + 6, enemy.radius * 0.9, enemy.radius * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.fillStyle = enemy.color;
     ctx.beginPath();
     ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.72)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+    ctx.stroke();
 
     for (let i = 0; i < 5; i += 1) {
       const angle = (Math.PI * 2 * i) / 5;
@@ -833,15 +913,62 @@ function drawEnemies() {
       ctx.fill();
     }
 
+    if (enemy.type === "cold") {
+      ctx.strokeStyle = "#dff8ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(enemy.x - 7, enemy.y);
+      ctx.lineTo(enemy.x + 7, enemy.y);
+      ctx.moveTo(enemy.x, enemy.y - 7);
+      ctx.lineTo(enemy.x, enemy.y + 7);
+      ctx.stroke();
+    } else if (enemy.type === "flu") {
+      ctx.fillStyle = "#fff3d6";
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y - enemy.radius - 2, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#f08d11";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y - enemy.radius - 2, 6, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+    } else if (enemy.type === "superbug") {
+      ctx.strokeStyle = "#ffe1ea";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(enemy.x, enemy.y - 8);
+      ctx.lineTo(enemy.x + 6, enemy.y);
+      ctx.lineTo(enemy.x, enemy.y + 8);
+      ctx.lineTo(enemy.x - 6, enemy.y);
+      ctx.closePath();
+      ctx.stroke();
+    } else if (enemy.type === "boss") {
+      ctx.fillStyle = "#c9b9ff";
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y - enemy.radius - 4, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#7d5cff";
+      ctx.fillRect(enemy.x - 7, enemy.y - enemy.radius - 7, 14, 3);
+      ctx.fillRect(enemy.x - 1.5, enemy.y - enemy.radius - 12, 3, 14);
+    }
+
     ctx.fillStyle = "#1f3758";
     ctx.beginPath();
-    ctx.arc(enemy.x - enemy.radius * 0.3, enemy.y - enemy.radius * 0.2, 2.6, 0, Math.PI * 2);
-    ctx.arc(enemy.x + enemy.radius * 0.3, enemy.y - enemy.radius * 0.2, 2.6, 0, Math.PI * 2);
+    ctx.arc(enemy.x - enemy.radius * 0.28, enemy.y - enemy.radius * 0.18, 2.6, 0, Math.PI * 2);
+    ctx.arc(enemy.x + enemy.radius * 0.28, enemy.y - enemy.radius * 0.18, 2.6, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#1f3758";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(enemy.x, enemy.y + enemy.radius * 0.05, enemy.radius * 0.35, 0.15, Math.PI - 0.15);
+    if (enemy.type === "cold") {
+      ctx.arc(enemy.x, enemy.y + enemy.radius * 0.02, enemy.radius * 0.32, 0.2, Math.PI - 0.2);
+    } else if (enemy.type === "flu") {
+      ctx.arc(enemy.x, enemy.y + enemy.radius * 0.12, enemy.radius * 0.2, Math.PI + 0.25, Math.PI * 2 - 0.25);
+    } else if (enemy.type === "superbug") {
+      ctx.arc(enemy.x, enemy.y + enemy.radius * 0.06, enemy.radius * 0.34, 0.08, Math.PI - 0.08);
+    } else {
+      ctx.arc(enemy.x, enemy.y + enemy.radius * 0.1, enemy.radius * 0.18, Math.PI + 0.15, Math.PI * 2 - 0.15);
+    }
     ctx.stroke();
 
     const barWidth = enemy.radius * 2.2;
@@ -923,106 +1050,195 @@ function drawEffects() {
 }
 
 function drawBackgroundDetails() {
-  const wallGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  wallGradient.addColorStop(0, "#dff7ff");
-  wallGradient.addColorStop(0.42, "#f9feff");
-  wallGradient.addColorStop(0.42, "#d2eef8");
-  wallGradient.addColorStop(1, "#bde3ef");
-  ctx.fillStyle = wallGradient;
+  const drawRoom = (room) => {
+    ctx.fillStyle = "rgba(126, 144, 156, 0.12)";
+    ctx.beginPath();
+    ctx.roundRect(room.x + 6, room.y + 8, room.w, room.h, 10);
+    ctx.fill();
+
+    ctx.fillStyle = room.fill || "#edf3f6";
+    ctx.beginPath();
+    ctx.roundRect(room.x, room.y, room.w, room.h, 10);
+    ctx.fill();
+
+    ctx.strokeStyle = "#8ea0aa";
+    ctx.lineWidth = 8;
+    ctx.stroke();
+
+    if (room.door) {
+      ctx.strokeStyle = "#dfe8ee";
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      if (room.door.side === "bottom") {
+        ctx.moveTo(room.door.x, room.y + room.h);
+        ctx.lineTo(room.door.x + room.door.size, room.y + room.h);
+      } else if (room.door.side === "top") {
+        ctx.moveTo(room.door.x, room.y);
+        ctx.lineTo(room.door.x + room.door.size, room.y);
+      } else if (room.door.side === "left") {
+        ctx.moveTo(room.x, room.door.y);
+        ctx.lineTo(room.x, room.door.y + room.door.size);
+      } else {
+        ctx.moveTo(room.x + room.w, room.door.y);
+        ctx.lineTo(room.x + room.w, room.door.y + room.door.size);
+      }
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "#5f7481";
+    ctx.font = '700 13px "Nunito"';
+    ctx.textAlign = "center";
+    ctx.fillText(room.label, room.x + room.w / 2, room.y + 22);
+    ctx.textAlign = "start";
+
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(room.x + 12, room.y + room.h - 12);
+    ctx.lineTo(room.x + room.w - 12, room.y + room.h - 12);
+    ctx.stroke();
+  };
+
+  const drawBed = (x, y, horizontal = true) => {
+    ctx.fillStyle = "#d7e8ef";
+    if (horizontal) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, 38, 18, 6);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.roundRect(x + 4, y + 3, 14, 12, 4);
+      ctx.fill();
+      ctx.fillStyle = "#8ea0aa";
+      ctx.fillRect(x + 4, y + 18, 3, 6);
+      ctx.fillRect(x + 31, y + 18, 3, 6);
+    } else {
+      ctx.beginPath();
+      ctx.roundRect(x, y, 18, 38, 6);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.roundRect(x + 3, y + 4, 12, 14, 4);
+      ctx.fill();
+      ctx.fillStyle = "#8ea0aa";
+      ctx.fillRect(x + 18, y + 4, 6, 3);
+      ctx.fillRect(x + 18, y + 31, 6, 3);
+    }
+  };
+
+  const drawCabinet = (x, y, w, h, color = "#d8e3d1") => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 6);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(95, 116, 129, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  };
+
+  const drawCounter = (x, y, w, h) => {
+    ctx.fillStyle = "#d9c0a0";
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(123, 92, 56, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  };
+
+  ctx.fillStyle = "#cfd8dd";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = "rgba(255,255,255,0.45)";
-  for (let x = 0; x < canvas.width; x += 80) {
-    for (let y = 355; y < canvas.height; y += 60) {
-      ctx.fillRect(x + 6, y + 6, 68, 48);
+  ctx.fillStyle = "#f6f9fb";
+  ctx.beginPath();
+  ctx.roundRect(26, 22, 908, 552, 18);
+  ctx.fill();
+  ctx.strokeStyle = "#7f929d";
+  ctx.lineWidth = 12;
+  ctx.stroke();
+
+  const rooms = [
+    { x: 48, y: 42, w: 152, h: 94, label: "Reception", fill: "#eff6f8", door: { side: "bottom", x: 108, size: 34 } },
+    { x: 220, y: 42, w: 176, h: 112, label: "Triage", fill: "#eef4f8", door: { side: "bottom", x: 286, size: 36 } },
+    { x: 420, y: 42, w: 160, h: 90, label: "Exam 1", fill: "#f2f7f3", door: { side: "bottom", x: 480, size: 30 } },
+    { x: 602, y: 42, w: 150, h: 96, label: "Pharmacy", fill: "#f5f2fb", door: { side: "bottom", x: 662, size: 30 } },
+    { x: 770, y: 42, w: 140, h: 120, label: "Lab", fill: "#f0f6fb", door: { side: "left", y: 96, size: 34 } },
+    { x: 50, y: 372, w: 164, h: 154, label: "Ward A", fill: "#f4f8fb", door: { side: "top", x: 118, size: 34 } },
+    { x: 234, y: 388, w: 176, h: 136, label: "Nurse Station", fill: "#eef6f6", door: { side: "top", x: 298, size: 36 } },
+    { x: 432, y: 388, w: 166, h: 136, label: "ICU", fill: "#f4f7fb", door: { side: "top", x: 494, size: 34 } },
+    { x: 620, y: 388, w: 132, h: 136, label: "Storage", fill: "#f7f4ee", door: { side: "top", x: 670, size: 30 } },
+    { x: 770, y: 388, w: 140, h: 136, label: "Imaging", fill: "#eef3f8", door: { side: "top", x: 824, size: 30 } },
+  ];
+
+  rooms.forEach(drawRoom);
+
+  ctx.fillStyle = "#e1e8ec";
+  for (let x = 70; x < 900; x += 40) {
+    for (let y = 180; y < 358; y += 28) {
+      ctx.fillRect(x, y, 34, 22);
     }
   }
 
-  ctx.fillStyle = "#b8dde9";
-  ctx.fillRect(0, 332, canvas.width, 18);
-  ctx.fillStyle = "#9fd2e1";
-  ctx.fillRect(0, 0, canvas.width, 20);
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  for (let x = 82; x < 892; x += 40) {
+    ctx.fillRect(x, 184, 2, 164);
+  }
 
-  const roomBlocks = [
-    { x: 46, y: 34, w: 150, h: 92, label: "Triage" },
-    { x: 236, y: 46, w: 126, h: 72, label: "Lab" },
-    { x: 640, y: 30, w: 128, h: 82, label: "Pharmacy" },
-    { x: 782, y: 62, w: 126, h: 86, label: "Ward" },
-    { x: 64, y: 404, w: 142, h: 110, label: "Break Room" },
-    { x: 304, y: 398, w: 182, h: 126, label: "Supply" },
-    { x: 620, y: 410, w: 160, h: 96, label: "Imaging" },
-  ];
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  for (let y = 192; y < 348; y += 28) {
+    ctx.fillRect(70, y, 808, 2);
+  }
 
-  roomBlocks.forEach((room) => {
-    ctx.fillStyle = "rgba(255,255,255,0.82)";
-    ctx.beginPath();
-    ctx.roundRect(room.x, room.y, room.w, room.h, 18);
-    ctx.fill();
+  ctx.fillStyle = "rgba(130, 149, 159, 0.14)";
+  for (let x = 50; x < 900; x += 2) {
+    ctx.fillRect(x, 170, 1, 184);
+  }
 
-    ctx.strokeStyle = "rgba(121, 182, 204, 0.75)";
-    ctx.lineWidth = 3;
-    ctx.stroke();
+  drawCounter(70, 66, 52, 18);
+  drawCounter(126, 66, 42, 18);
+  drawCabinet(292, 72, 70, 20, "#dae8ef");
+  drawCabinet(440, 62, 46, 18, "#d5e8d8");
+  drawBed(458, 86, true);
+  drawCabinet(620, 68, 46, 20, "#ece3fb");
+  drawCabinet(672, 68, 58, 20, "#ece3fb");
+  drawCabinet(802, 72, 76, 26, "#d9e6ef");
 
-    ctx.fillStyle = "#c7ebf7";
-    ctx.beginPath();
-    ctx.roundRect(room.x + 12, room.y + 14, room.w - 24, 18, 9);
-    ctx.fill();
-
-    ctx.fillStyle = "#37607f";
-    ctx.font = '700 13px "Nunito"';
-    ctx.textAlign = "center";
-    ctx.fillText(room.label, room.x + room.w / 2, room.y + 27);
-  });
-
-  ctx.textAlign = "start";
-
-  const doors = [
-    { x: 116, y: 124, w: 26, h: 22 },
-    { x: 285, y: 118, w: 26, h: 22 },
-    { x: 691, y: 112, w: 26, h: 22 },
-    { x: 836, y: 148, w: 26, h: 22 },
-    { x: 120, y: 382, w: 26, h: 22 },
-    { x: 380, y: 376, w: 26, h: 22 },
-    { x: 688, y: 388, w: 26, h: 22 },
-  ];
-
-  doors.forEach((door) => {
-    ctx.fillStyle = "#7ec6de";
-    ctx.beginPath();
-    ctx.roundRect(door.x, door.y, door.w, door.h, 7);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.fillRect(door.x + door.w / 2 - 1, door.y + 4, 2, door.h - 8);
-  });
-
-  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  drawBed(74, 410, true);
+  drawBed(74, 456, true);
+  drawBed(144, 410, true);
+  drawBed(144, 456, true);
+  drawCounter(266, 438, 110, 24);
+  drawCabinet(256, 474, 34, 24, "#dceae2");
+  drawCabinet(322, 474, 34, 24, "#dceae2");
+  drawBed(456, 420, false);
+  drawBed(512, 420, false);
+  drawCabinet(642, 430, 40, 34, "#eadfcf");
+  drawCabinet(692, 430, 40, 34, "#eadfcf");
+  drawCabinet(800, 422, 82, 58, "#d9e2ec");
+  ctx.strokeStyle = "#93a8b4";
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.roundRect(344, 34, 128, 56, 18);
-  ctx.fill();
-  ctx.fillStyle = "#46c7f4";
-  ctx.fillRect(403, 44, 10, 32);
-  ctx.fillRect(392, 55, 32, 10);
+  ctx.arc(840, 452, 24, 0, Math.PI * 2);
+  ctx.stroke();
 
-  const deskBlocks = [
-    { x: 522, y: 410, w: 52, h: 24 },
-    { x: 536, y: 454, w: 38, h: 22 },
-    { x: 214, y: 448, w: 44, h: 22 },
-  ];
-
-  deskBlocks.forEach((desk) => {
-    ctx.fillStyle = "#f6d69f";
-    ctx.beginPath();
-    ctx.roundRect(desk.x, desk.y, desk.w, desk.h, 8);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(145, 105, 44, 0.3)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  });
-
-  ctx.fillStyle = "rgba(70, 199, 244, 0.16)";
+  ctx.fillStyle = "#f8fbfd";
   ctx.beginPath();
-  ctx.arc(870, 500, 58, 0, Math.PI * 2);
+  ctx.roundRect(340, 30, 130, 46, 12);
   ctx.fill();
+  ctx.strokeStyle = "#93d5e8";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.fillStyle = "#5abfe1";
+  ctx.fillRect(398, 38, 12, 28);
+  ctx.fillRect(390, 46, 28, 12);
+
+  ctx.fillStyle = "#d35a5a";
+  ctx.beginPath();
+  ctx.roundRect(880, 472, 24, 24, 6);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(890, 477, 4, 14);
+  ctx.fillRect(885, 482, 14, 4);
 }
 
 function render() {
