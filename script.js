@@ -10,6 +10,8 @@ const hud = {
 };
 
 const startWaveBtn = document.getElementById("startWaveBtn");
+const speedToggleBtn = document.getElementById("speedToggleBtn");
+const autoStartToggle = document.getElementById("autoStartToggle");
 const restartBtn = document.getElementById("restartBtn");
 const modalRestartBtn = document.getElementById("modalRestartBtn");
 const buildMenu = document.getElementById("buildMenu");
@@ -185,6 +187,9 @@ const game = {
   state: "ready",
   lastTime: 0,
   selectedPadId: null,
+  speedMultiplier: 1,
+  autoStartEnabled: false,
+  autoStartTimer: 0,
 };
 
 function createPads() {
@@ -214,6 +219,12 @@ function resetGame() {
   game.state = "ready";
   game.selectedPadId = null;
   game.lastTime = 0;
+  game.speedMultiplier = 1;
+  game.autoStartEnabled = false;
+  game.autoStartTimer = 0;
+  speedToggleBtn.textContent = "Speed: 1x";
+  speedToggleBtn.setAttribute("aria-pressed", "false");
+  autoStartToggle.checked = false;
   hideBuildMenu();
   hideModal();
   updateHud();
@@ -239,6 +250,7 @@ function beginWave() {
   };
   game.enemiesRemainingToSpawn = queue.length;
   game.state = "wave";
+  game.autoStartTimer = 0;
   hideBuildMenu();
   updateHud();
 }
@@ -268,6 +280,13 @@ function spawnEnemy(typeKey) {
 }
 
 function updateWave(delta) {
+  if (game.state === "ready" && game.autoStartEnabled && game.waveIndex < WAVES.length && !game.activeWave) {
+    game.autoStartTimer = Math.max(0, game.autoStartTimer - delta);
+    if (game.autoStartTimer === 0) {
+      beginWave();
+    }
+  }
+
   if (!game.activeWave) {
     return;
   }
@@ -290,9 +309,28 @@ function updateWave(delta) {
       showModal(true);
     } else {
       game.state = "ready";
+      game.autoStartTimer = game.autoStartEnabled ? 1.15 : 0;
     }
 
     updateHud();
+  }
+}
+
+function toggleSpeed() {
+  game.speedMultiplier = game.speedMultiplier === 1 ? 2 : 1;
+  speedToggleBtn.textContent = `Speed: ${game.speedMultiplier}x`;
+  speedToggleBtn.setAttribute("aria-pressed", game.speedMultiplier === 2 ? "true" : "false");
+}
+
+function setAutoStart(enabled) {
+  game.autoStartEnabled = enabled;
+  if (!enabled) {
+    game.autoStartTimer = 0;
+    return;
+  }
+
+  if (game.state === "ready" && game.waveIndex < WAVES.length && !game.activeWave) {
+    game.autoStartTimer = 1.15;
   }
 }
 
@@ -621,8 +659,8 @@ function updateEffects(delta) {
 function drawPath() {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = "#d5eff8";
-  ctx.lineWidth = 50;
+  ctx.strokeStyle = "#dbeef6";
+  ctx.lineWidth = 56;
   ctx.beginPath();
   ctx.moveTo(PATH_POINTS[0].x, PATH_POINTS[0].y);
   for (let i = 1; i < PATH_POINTS.length; i += 1) {
@@ -630,35 +668,41 @@ function drawPath() {
   }
   ctx.stroke();
 
-  ctx.strokeStyle = "#96d7ed";
-  ctx.lineWidth = 34;
+  ctx.strokeStyle = "#f8fdff";
+  ctx.lineWidth = 40;
   ctx.stroke();
 
-  ctx.setLineDash([14, 12]);
-  ctx.strokeStyle = "rgba(255,255,255,0.9)";
-  ctx.lineWidth = 5;
+  ctx.setLineDash([18, 14]);
+  ctx.strokeStyle = "rgba(127, 183, 206, 0.72)";
+  ctx.lineWidth = 4;
   ctx.stroke();
   ctx.setLineDash([]);
+
+  ctx.strokeStyle = "rgba(131, 208, 233, 0.18)";
+  ctx.lineWidth = 62;
+  ctx.stroke();
 }
 
 function drawZones() {
   const start = PATH_POINTS[0];
   const end = PATH_POINTS[PATH_POINTS.length - 1];
 
-  ctx.fillStyle = "rgba(29, 155, 240, 0.18)";
+  ctx.fillStyle = "rgba(70, 199, 244, 0.28)";
   ctx.beginPath();
   ctx.arc(start.x, start.y, 40, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "rgba(255, 97, 97, 0.2)";
+  ctx.fillStyle = "rgba(255, 97, 97, 0.25)";
   ctx.beginPath();
   ctx.arc(end.x, end.y, 46, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = "#1f3758";
   ctx.font = '800 18px "Baloo 2"';
-  ctx.fillText("Entrance", start.x - 34, start.y - 48);
-  ctx.fillText("Core", end.x - 20, end.y - 56);
+  ctx.textAlign = "center";
+  ctx.fillText("ER Entrance", start.x, start.y - 50);
+  ctx.fillText("Hospital Core", end.x, end.y - 58);
+  ctx.textAlign = "start";
 }
 
 function drawPads() {
@@ -681,19 +725,90 @@ function drawPads() {
   });
 }
 
+function drawStaffAvatar(x, y, type, scale = 1) {
+  const spec = TOWER_TYPES[type];
+  const skin = type === "doctor" ? "#ffd5bf" : type === "pharmacist" ? "#ffcfb2" : type === "infection" ? "#ffd8c4" : "#ffe0c9";
+  const bodyColor = type === "doctor" ? "#ffffff" : type === "pharmacist" ? "#8f74ff" : type === "infection" ? "#55c88d" : "#46c7f4";
+  const accentColor = type === "doctor" ? "#ff7b7b" : type === "pharmacist" ? "#f6d55c" : type === "infection" ? "#d7fff0" : "#ffffff";
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+
+  ctx.fillStyle = "rgba(31,55,88,0.12)";
+  ctx.beginPath();
+  ctx.ellipse(0, 17, 14, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = spec.color;
+  ctx.beginPath();
+  ctx.arc(0, 1, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(0, -5, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#1f3758";
+  ctx.beginPath();
+  ctx.arc(-2.5, -6, 1.1, 0, Math.PI * 2);
+  ctx.arc(2.5, -6, 1.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#1f3758";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.arc(0, -3.6, 2.8, 0.2, Math.PI - 0.2);
+  ctx.stroke();
+
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.roundRect(-8, 2, 16, 12, 6);
+  ctx.fill();
+
+  if (type === "nurse") {
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.roundRect(-6, -12, 12, 4, 2);
+    ctx.fill();
+    ctx.fillStyle = "#ff7b7b";
+    ctx.fillRect(-1, -11.5, 2, 3);
+    ctx.fillRect(-3.5, -10.3, 7, 1.5);
+  } else if (type === "doctor") {
+    ctx.strokeStyle = "#8cc2da";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(-4, 0, 2.1, 0, Math.PI * 2);
+    ctx.arc(4, 0, 2.1, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-1.8, 0);
+    ctx.lineTo(1.8, 0);
+    ctx.moveTo(6, 1.5);
+    ctx.quadraticCurveTo(7.5, 4.5, 5, 8.5);
+    ctx.stroke();
+  } else if (type === "pharmacist") {
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    ctx.roundRect(-6, 4, 12, 4, 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(-0.7, 4.2, 1.4, 3.6);
+  } else if (type === "infection") {
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    ctx.roundRect(-5, -12, 10, 6, 3);
+    ctx.fill();
+    ctx.fillStyle = "#2c8d59";
+    ctx.fillRect(-0.9, -10.5, 1.8, 3);
+  }
+
+  ctx.restore();
+}
+
 function drawTowers() {
   game.towers.forEach((tower) => {
-    ctx.fillStyle = tower.color;
-    ctx.beginPath();
-    ctx.arc(tower.x, tower.y, 18, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = '800 14px "Nunito"';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const letter = tower.type === "nurse" ? "N" : tower.type === "doctor" ? "D" : tower.type === "pharmacist" ? "P" : "I";
-    ctx.fillText(letter, tower.x, tower.y + 1);
+    drawStaffAvatar(tower.x, tower.y, tower.type, 1);
   });
 }
 
@@ -808,25 +923,106 @@ function drawEffects() {
 }
 
 function drawBackgroundDetails() {
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
-  [
-    { x: 90, y: 420, w: 140, h: 100 },
-    { x: 340, y: 420, w: 170, h: 120 },
-    { x: 640, y: 60, w: 130, h: 70 },
-    { x: 760, y: 80, w: 120, h: 90 },
-  ].forEach((room) => {
+  const wallGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  wallGradient.addColorStop(0, "#dff7ff");
+  wallGradient.addColorStop(0.42, "#f9feff");
+  wallGradient.addColorStop(0.42, "#d2eef8");
+  wallGradient.addColorStop(1, "#bde3ef");
+  ctx.fillStyle = wallGradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "rgba(255,255,255,0.45)";
+  for (let x = 0; x < canvas.width; x += 80) {
+    for (let y = 355; y < canvas.height; y += 60) {
+      ctx.fillRect(x + 6, y + 6, 68, 48);
+    }
+  }
+
+  ctx.fillStyle = "#b8dde9";
+  ctx.fillRect(0, 332, canvas.width, 18);
+  ctx.fillStyle = "#9fd2e1";
+  ctx.fillRect(0, 0, canvas.width, 20);
+
+  const roomBlocks = [
+    { x: 46, y: 34, w: 150, h: 92, label: "Triage" },
+    { x: 236, y: 46, w: 126, h: 72, label: "Lab" },
+    { x: 640, y: 30, w: 128, h: 82, label: "Pharmacy" },
+    { x: 782, y: 62, w: 126, h: 86, label: "Ward" },
+    { x: 64, y: 404, w: 142, h: 110, label: "Break Room" },
+    { x: 304, y: 398, w: 182, h: 126, label: "Supply" },
+    { x: 620, y: 410, w: 160, h: 96, label: "Imaging" },
+  ];
+
+  roomBlocks.forEach((room) => {
+    ctx.fillStyle = "rgba(255,255,255,0.82)";
     ctx.beginPath();
     ctx.roundRect(room.x, room.y, room.w, room.h, 18);
     ctx.fill();
+
+    ctx.strokeStyle = "rgba(121, 182, 204, 0.75)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = "#c7ebf7";
+    ctx.beginPath();
+    ctx.roundRect(room.x + 12, room.y + 14, room.w - 24, 18, 9);
+    ctx.fill();
+
+    ctx.fillStyle = "#37607f";
+    ctx.font = '700 13px "Nunito"';
+    ctx.textAlign = "center";
+    ctx.fillText(room.label, room.x + room.w / 2, room.y + 27);
   });
 
-  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  ctx.textAlign = "start";
+
+  const doors = [
+    { x: 116, y: 124, w: 26, h: 22 },
+    { x: 285, y: 118, w: 26, h: 22 },
+    { x: 691, y: 112, w: 26, h: 22 },
+    { x: 836, y: 148, w: 26, h: 22 },
+    { x: 120, y: 382, w: 26, h: 22 },
+    { x: 380, y: 376, w: 26, h: 22 },
+    { x: 688, y: 388, w: 26, h: 22 },
+  ];
+
+  doors.forEach((door) => {
+    ctx.fillStyle = "#7ec6de";
+    ctx.beginPath();
+    ctx.roundRect(door.x, door.y, door.w, door.h, 7);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fillRect(door.x + door.w / 2 - 1, door.y + 4, 2, door.h - 8);
+  });
+
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
   ctx.beginPath();
-  ctx.roundRect(320, 38, 110, 52, 18);
+  ctx.roundRect(344, 34, 128, 56, 18);
   ctx.fill();
   ctx.fillStyle = "#46c7f4";
-  ctx.fillRect(370, 48, 10, 30);
-  ctx.fillRect(360, 58, 30, 10);
+  ctx.fillRect(403, 44, 10, 32);
+  ctx.fillRect(392, 55, 32, 10);
+
+  const deskBlocks = [
+    { x: 522, y: 410, w: 52, h: 24 },
+    { x: 536, y: 454, w: 38, h: 22 },
+    { x: 214, y: 448, w: 44, h: 22 },
+  ];
+
+  deskBlocks.forEach((desk) => {
+    ctx.fillStyle = "#f6d69f";
+    ctx.beginPath();
+    ctx.roundRect(desk.x, desk.y, desk.w, desk.h, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(145, 105, 44, 0.3)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  ctx.fillStyle = "rgba(70, 199, 244, 0.16)";
+  ctx.beginPath();
+  ctx.arc(870, 500, 58, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function render() {
@@ -845,8 +1041,9 @@ function tick(timestamp) {
   if (!game.lastTime) {
     game.lastTime = timestamp;
   }
-  const delta = Math.min((timestamp - game.lastTime) / 1000, 0.033);
+  const rawDelta = Math.min((timestamp - game.lastTime) / 1000, 0.033);
   game.lastTime = timestamp;
+  const delta = rawDelta * game.speedMultiplier;
 
   if (game.state !== "gameover" && game.state !== "victory") {
     updateWave(delta);
@@ -884,6 +1081,8 @@ canvas.addEventListener("click", (event) => {
 
 closeBuildMenuBtn.addEventListener("click", hideBuildMenu);
 startWaveBtn.addEventListener("click", beginWave);
+speedToggleBtn.addEventListener("click", toggleSpeed);
+autoStartToggle.addEventListener("change", (event) => setAutoStart(event.target.checked));
 restartBtn.addEventListener("click", resetGame);
 modalRestartBtn.addEventListener("click", resetGame);
 

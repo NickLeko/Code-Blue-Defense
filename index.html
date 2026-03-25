@@ -43,6 +43,17 @@
 
         <div class="action-row">
           <button id="startWaveBtn" class="action-btn primary">Start Wave</button>
+          <button id="speedToggleBtn" class="action-btn secondary" aria-pressed="false">Speed: 1x</button>
+          <label class="toggle-card" for="autoStartToggle">
+            <span class="toggle-copy">
+              <strong>Auto Start</strong>
+              <small>Launch the next wave automatically</small>
+            </span>
+            <span class="toggle-switch">
+              <input id="autoStartToggle" type="checkbox">
+              <span class="toggle-slider"></span>
+            </span>
+          </label>
           <button id="restartBtn" class="action-btn secondary">Restart Game</button>
         </div>
       </header>
@@ -83,10 +94,10 @@
           <section class="info-card">
             <h2>Defense Team</h2>
             <ul class="legend-list">
-              <li><span class="legend-icon nurse">N</span><div><strong>Nurse</strong><p>Fast starter tower with quick syringe shots.</p></div></li>
-              <li><span class="legend-icon doctor">D</span><div><strong>Doctor</strong><p>Heavy single-target specialist for tough pathogens.</p></div></li>
-              <li><span class="legend-icon pharmacist">P</span><div><strong>Pharmacist</strong><p>Applies medication damage over time.</p></div></li>
-              <li><span class="legend-icon infection">I</span><div><strong>Infection Control</strong><p>Slows clusters with sanitation bursts.</p></div></li>
+              <li><span class="legend-icon nurse">👩‍⚕️</span><div><strong>Nurse</strong><p>Fast starter tower with quick syringe shots.</p></div></li>
+              <li><span class="legend-icon doctor">🧑‍⚕️</span><div><strong>Doctor</strong><p>Heavy single-target specialist for tough pathogens.</p></div></li>
+              <li><span class="legend-icon pharmacist">💊</span><div><strong>Pharmacist</strong><p>Applies medication damage over time.</p></div></li>
+              <li><span class="legend-icon infection">🧴</span><div><strong>Infection Control</strong><p>Slows clusters with sanitation bursts.</p></div></li>
             </ul>
           </section>
 
