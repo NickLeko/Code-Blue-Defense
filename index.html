@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Blue Defense</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="game-card">
+      <header class="hud">
+        <div class="brand-block">
+          <p class="eyebrow">Hospital Tower Defense</p>
+          <h1>Code Blue Defense</h1>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-pill">
+            <span class="stat-label">Lives</span>
+            <strong id="livesValue">20</strong>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Credits</span>
+            <strong id="creditsValue">100</strong>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Wave</span>
+            <strong id="waveValue">0 / 5</strong>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Status</span>
+            <strong id="statusValue">Ready</strong>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Score</span>
+            <strong id="scoreValue">0</strong>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="startWaveBtn" class="action-btn primary">Start Wave</button>
+          <button id="restartBtn" class="action-btn secondary">Restart Game</button>
+        </div>
+      </header>
+
+      <section class="stage-panel">
+        <div class="stage-wrap">
+          <canvas id="gameCanvas" width="960" height="600" aria-label="Code Blue Defense game board"></canvas>
+
+          <div id="buildMenu" class="build-menu hidden" aria-hidden="true">
+            <div class="menu-header">
+              <span>Build Team</span>
+              <button id="closeBuildMenu" class="icon-btn" aria-label="Close build menu">×</button>
+            </div>
+            <div id="buildOptions" class="build-options"></div>
+          </div>
+
+          <div id="modalOverlay" class="modal-overlay hidden" aria-hidden="true">
+            <div class="modal-card">
+              <p id="modalTag" class="modal-tag">Victory</p>
+              <h2 id="modalTitle">Hospital Saved!</h2>
+              <p id="modalMessage">You held the line.</p>
+              <div class="modal-stats">
+                <div>
+                  <span>Final Score</span>
+                  <strong id="modalScore">0</strong>
+                </div>
+                <div>
+                  <span>Wave Reached</span>
+                  <strong id="modalWave">5</strong>
+                </div>
+              </div>
+              <button id="modalRestartBtn" class="action-btn primary wide">Play Again</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="sidebar">
+          <section class="info-card">
+            <h2>Defense Team</h2>
+            <ul class="legend-list">
+              <li><span class="legend-icon nurse">N</span><div><strong>Nurse</strong><p>Fast starter tower with quick syringe shots.</p></div></li>
+              <li><span class="legend-icon doctor">D</span><div><strong>Doctor</strong><p>Heavy single-target specialist for tough pathogens.</p></div></li>
+              <li><span class="legend-icon pharmacist">P</span><div><strong>Pharmacist</strong><p>Applies medication damage over time.</p></div></li>
+              <li><span class="legend-icon infection">I</span><div><strong>Infection Control</strong><p>Slows clusters with sanitation bursts.</p></div></li>
+            </ul>
+          </section>
+
+          <section class="info-card">
+            <h2>Enemy Roster</h2>
+            <ul class="legend-list compact">
+              <li><span class="enemy-chip cold"></span><div><strong>Cold Germ</strong><p>Fast and flimsy.</p></div></li>
+              <li><span class="enemy-chip flu"></span><div><strong>Flu Bug</strong><p>Balanced troublemaker.</p></div></li>
+              <li><span class="enemy-chip superbug"></span><div><strong>Superbug</strong><p>Tanky, slow, and stubborn.</p></div></li>
+              <li><span class="enemy-chip boss"></span><div><strong>Mutation Boss</strong><p>Huge final-wave menace.</p></div></li>
+            </ul>
+          </section>
+        </aside>
+      </section>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
