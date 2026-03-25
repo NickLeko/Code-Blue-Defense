@@ -564,31 +564,65 @@ button {
 
 @media (max-width: 760px) {
   body {
-    padding: 10px;
+    padding: 0;
   }
 
   .game-card {
-    border-radius: 24px;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
   }
 
   .hud {
-    padding: 16px;
+    gap: 8px;
+    padding: 8px 8px 6px;
+  }
+
+  .brand-block {
+    display: none;
   }
 
   .stats-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .stat-pill {
+    min-height: 54px;
+    padding: 6px 6px 5px;
+    border-radius: 10px;
+  }
+
+  .stat-label {
+    font-size: 0.52rem;
+    letter-spacing: 0.03em;
+  }
+
+  .stat-pill strong {
+    margin-top: 2px;
+    font-size: 0.72rem;
+  }
+
+  .action-row {
+    gap: 6px;
   }
 
   .stage-panel {
-    padding: 0 10px 10px;
+    gap: 0;
+    padding: 0;
   }
 
   .stage-wrap {
-    padding: 10px;
+    padding: 4px;
+    border-radius: 0;
+  }
+
+  #gameCanvas {
+    border-radius: 10px;
   }
 
   .sidebar {
-    grid-template-columns: 1fr;
+    display: none;
   }
 
   .action-row {
@@ -598,14 +632,37 @@ button {
 
   .action-btn {
     min-width: 0;
+    padding: 10px 10px;
+    border-radius: 12px;
+    font-size: 0.88rem;
   }
 
   .toggle-card {
     grid-column: 1 / -1;
     min-width: 0;
+    padding: 7px 9px;
+    border-radius: 12px;
   }
 
-  .brand-block h1 {
-    max-width: none;
+  .toggle-copy strong {
+    font-size: 0.82rem;
+  }
+
+  .toggle-copy small {
+    font-size: 0.62rem;
+  }
+
+  .toggle-slider {
+    width: 46px;
+    height: 26px;
+  }
+
+  .toggle-slider::after {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle-switch input:checked + .toggle-slider::after {
+    transform: translateX(20px);
   }
 }
